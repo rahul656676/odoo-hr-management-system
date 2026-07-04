@@ -1,8 +1,7 @@
-// src/api.js
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -15,7 +14,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Better error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -23,9 +21,7 @@ api.interceptors.response.use(
       error.response?.data?.message ||
       error.response?.data?.error ||
       error.message ||
-      "Something went wrong. Please try again.";
-
-    console.error("API Error:", message);
+      "Something went wrong";
 
     return Promise.reject(new Error(message));
   }
