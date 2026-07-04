@@ -21,10 +21,34 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ======================
-// Middleware
+// CORS FIX
 // ======================
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://odoo-hr-management-system.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        return callback(null, true);
+      }
+
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
+
+// ======================
+// Body Parser
+// ======================
 
 app.use(
   express.json({
@@ -35,6 +59,7 @@ app.use(
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "10mb",
   })
 );
 
@@ -83,19 +108,12 @@ app.get("/api/health", (req, res) => {
 // ======================
 
 app.use("/api/auth", authRoutes);
-
 app.use("/api/users", userRoutes);
-
 app.use("/api/attendance", attendanceRoutes);
-
 app.use("/api/leave", leaveRoutes);
-
 app.use("/api/salary", salaryRoutes);
-
 app.use("/api/resume", resumeRoutes);
-
 app.use("/api/photo", photoRoutes);
-
 app.use("/api/chat", chatRoutes);
 
 // ======================
@@ -151,7 +169,7 @@ app.use((err, req, res, next) => {
   // Default server error
   res.status(500).json({
     success: false,
-    error: "Internal server error",
+    error: err.message || "Internal server error",
   });
 });
 
