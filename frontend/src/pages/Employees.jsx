@@ -1,13 +1,13 @@
-// src/pages/Employees.jsx
+﻿// src/pages/Employees.jsx
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import Modal from '../components/Modal.jsx';
 
 function initials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
 }
-const STATUS_ICON = { Present: '🟢', OnLeave: '✈️', Absent: '🟡', 'Half-day': '🟡' };
+const STATUS_ICON = { Present: '●', OnLeave: '●', Absent: '●', 'Half-day': '●' };
 
 const EMPTY_FORM = { name: '', email: '', department: '', jobPosition: '', role: 'employee', dateOfJoining: '' };
 
@@ -21,6 +21,7 @@ export default function Employees() {
   const [creating, setCreating] = useState(false);
   const [createdInfo, setCreatedInfo] = useState(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   function load() {
     setLoading(true);
@@ -28,6 +29,10 @@ export default function Employees() {
   }
 
   useEffect(load, []);
+
+  useEffect(() => {
+    setQuery(searchParams.get('search') || '');
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -62,18 +67,29 @@ export default function Employees() {
 
       <div className="search-bar">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6"/><path d="M21 21l-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-        <input placeholder="Search by name, department, employee ID…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input
+          placeholder="Search by name, department, employee ID..."
+          value={query}
+          onChange={(e) => {
+            const value = e.target.value;
+            setQuery(value);
+            if (value.trim()) setSearchParams({ search: value });
+            else setSearchParams({});
+          }}
+        />
       </div>
 
       {error && !showAdd && <div className="alert alert-error">{error}</div>}
 
       {loading ? (
-        <p className="muted">Loading employees…</p>
+        <p className="muted">Loading employees...</p>
       ) : (
         <div className="employee-card-grid">
           {filtered.map((u) => (
             <button className="employee-card" key={u.id} onClick={() => navigate(`/employees/${u.id}`)}>
-              <span className="employee-status-dot" title={u.todayStatus}>{STATUS_ICON[u.todayStatus] || '🟡'}</span>
+              <span className={`employee-status-dot status-dot-${(u.todayStatus || 'absent').toLowerCase()}`} title={u.todayStatus}>
+                {STATUS_ICON[u.todayStatus] || '●'}
+              </span>
               <span className="avatar-circle large">{initials(u.name)}</span>
               <span className="employee-card-name">{u.name}</span>
               <span className="employee-card-role">{u.jobPosition || u.role}</span>
@@ -88,7 +104,7 @@ export default function Employees() {
         <Modal title="Add New Employee" onClose={() => setShowAdd(false)}>
           {createdInfo ? (
             <div className="created-info">
-              <p>✅ <strong>{createdInfo.name}</strong>'s account has been created.</p>
+              <p><strong>{createdInfo.name}</strong>'s account has been created.</p>
               <div className="credential-box">
                 <div><span className="muted">Login ID</span><strong>{createdInfo.code}</strong></div>
                 <div><span className="muted">Temporary Password</span><strong>{createdInfo.password}</strong></div>
@@ -125,7 +141,7 @@ export default function Employees() {
                 </label>
               </div>
               <button className="btn btn-primary btn-block" type="submit" disabled={creating}>
-                {creating ? 'Creating…' : 'Create Employee'}
+                {creating ? 'Creating...' : 'Create Employee'}
               </button>
             </form>
           )}

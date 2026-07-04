@@ -1,65 +1,177 @@
 // server.js
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
 
-console.log('GROQ_API_KEY loaded?', !!process.env.GROQ_API_KEY);
-console.log('Current working directory:', process.cwd());
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+require("dotenv").config();
 
+const store = require("./db/store");
 
-const store = require('./db/store');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const attendanceRoutes = require('./routes/attendance');
-const leaveRoutes = require('./routes/leave');
-const salaryRoutes = require('./routes/salary');
-const resumeRoutes = require('./routes/resume');
-const photoRoutes = require('./routes/photo');
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/users");
+const attendanceRoutes = require("./routes/attendance");
+const leaveRoutes = require("./routes/leave");
+const salaryRoutes = require("./routes/salary");
+const resumeRoutes = require("./routes/resume");
+const photoRoutes = require("./routes/photo");
+const chatRoutes = require("./routes/chat");
 
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
+// ======================
+// Middleware
+// ======================
+
 app.use(cors());
-app.use(express.json());
 
-// Serve uploaded profile photos as static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  express.json({
+    limit: "10mb",
+  })
+);
 
-// Seed demo data (admin + 3 employees) on first run only.
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+// ======================
+// Static Upload Folder
+// ======================
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
+
+// ======================
+// Seed Demo Data
+// ======================
+
 store.seedIfEmpty();
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'HRMS API', time: new Date().toISOString() });
+// ======================
+// Root Route
+// ======================
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Orbit HRMS Backend Running 🚀",
+    version: "1.0.0",
+  });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/leave', leaveRoutes);
-app.use('/api/salary', salaryRoutes);
-app.use('/api/resume', resumeRoutes);
-app.use('/api/photo', photoRoutes);
+// ======================
+// Health Check
+// ======================
 
-// 404 handler
-app.use('/api', (req, res) => {
-  res.status(404).json({ error: 'Route not found.' });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: "Orbit HRMS API",
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Central error handler (safety net)
+// ======================
+// API Routes
+// ======================
+
+app.use("/api/auth", authRoutes);
+
+app.use("/api/users", userRoutes);
+
+app.use("/api/attendance", attendanceRoutes);
+
+app.use("/api/leave", leaveRoutes);
+
+app.use("/api/salary", salaryRoutes);
+
+app.use("/api/resume", resumeRoutes);
+
+app.use("/api/photo", photoRoutes);
+
+app.use("/api/chat", chatRoutes);
+
+// ======================
+// 404 Route Handler
+// ======================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
+  });
+});
+
+// ======================
+// Global Error Handler
+// ======================
+
 app.use((err, req, res, next) => {
-  console.error(err);
-  if (err.name === 'MulterError') {
-    return res.status(400).json({ error: err.message });
+  console.error("GLOBAL ERROR:", err);
+
+  // Multer upload errors
+  if (err.name === "MulterError") {
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+    });
   }
-  if (err.message?.startsWith('Only image files')) {
-    return res.status(400).json({ error: err.message });
+
+  // File validation errors
+  if (err.message?.includes("Only image files")) {
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+    });
   }
-  res.status(500).json({ error: 'Something went wrong on the server.' });
+
+  // JWT errors
+  if (err.name === "JsonWebTokenError") {
+    return res.status(401).json({
+      success: false,
+      error: "Invalid token",
+    });
+  }
+
+  // Token expired
+  if (err.name === "TokenExpiredError") {
+    return res.status(401).json({
+      success: false,
+      error: "Token expired",
+    });
+  }
+
+  // Default server error
+  res.status(500).json({
+    success: false,
+    error: "Internal server error",
+  });
 });
+
+// ======================
+// Start Server
+// ======================
 
 app.listen(PORT, () => {
-  console.log(`HRMS backend running on http://localhost:${PORT}`);
-  console.log('Demo Admin login   -> admin@hrms.com / Admin@123');
-  console.log('Demo Employee login-> priya.sharma@hrms.com / Welcome@123');
+  console.log("\n==================================");
+  console.log(`🚀 Orbit HRMS Backend Running`);
+  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log("==================================");
+
+  console.log("\n👨‍💼 Demo Admin Login");
+  console.log("Email    : admin@hrms.com");
+  console.log("Password : Admin@123");
+
+  console.log("\n👨‍💻 Demo Employee Login");
+  console.log("Email    : priya.sharma@hrms.com");
+  console.log("Password : Welcome@123");
+
+  console.log("\n✅ Backend Ready\n");
 });

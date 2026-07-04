@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import ChatBot from './ChatBot.jsx';
 
 const NAV_ICONS = {
   dashboard: (
@@ -26,6 +27,7 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -37,6 +39,36 @@ export default function Layout() {
   }, []);
 
   const isAdmin = user?.role === 'admin';
+
+  function handleSearch(e) {
+    e.preventDefault();
+    const q = searchTerm.trim();
+    if (!q) return;
+
+    const normalized = q.toLowerCase();
+    const sectionRoutes = [
+      { keys: ['dashboard', 'home'], path: '/' },
+      { keys: ['attendance', 'check in', 'check out'], path: '/attendance' },
+      { keys: ['leave', 'time off', 'request', 'requests'], path: '/time-off' },
+      { keys: ['profile', 'my profile'], path: '/profile' },
+      { keys: ['setting', 'settings', 'password'], path: '/settings' },
+    ];
+
+    if (isAdmin && ['employee', 'employees', 'staff', 'team'].some((key) => normalized.includes(key))) {
+      navigate(`/employees?search=${encodeURIComponent(q)}`);
+      return;
+    }
+
+    const match = sectionRoutes.find((item) => item.keys.some((key) => normalized.includes(key)));
+    if (match) {
+      navigate(match.path);
+      return;
+    }
+
+    if (isAdmin) {
+      navigate(`/employees?search=${encodeURIComponent(q)}`);
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -73,10 +105,20 @@ export default function Layout() {
 
       <div className="main-col">
         <header className="topbar">
-          <div className="topbar-search">
+          <form className="topbar-search" onSubmit={handleSearch}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6"/><path d="M21 21l-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-            <span>Search employees, requests...</span>
-          </div>
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search employees, requests..."
+              aria-label="Search employees and pages"
+            />
+            {searchTerm && (
+              <button type="button" className="topbar-search-clear" aria-label="Clear search" onClick={() => setSearchTerm('')}>
+                ×
+              </button>
+            )}
+          </form>
 
           <div className="topbar-user" ref={menuRef}>
             <button className="avatar-btn" onClick={() => setMenuOpen((v) => !v)}>
@@ -100,6 +142,7 @@ export default function Layout() {
         <main className="content-area">
           <Outlet />
         </main>
+        <ChatBot />
       </div>
     </div>
   );
