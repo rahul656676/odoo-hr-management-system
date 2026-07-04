@@ -10,6 +10,16 @@ function initials(name = '') {
 
 const TABS = ['Profile', 'Private Info', 'Salary Info', 'Resume & Skills'];
 
+/* ─── Camera SVG Icon ─── */
+function CameraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
+
 export default function EmployeeProfile({ self = false }) {
   const { id } = useParams();
   const { user: me, refreshUser } = useAuth();
@@ -34,6 +44,11 @@ export default function EmployeeProfile({ self = false }) {
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
 
+  // Photo upload state
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const photoInputRef = useRef(null);
+
   function load() {
     if (!targetId) return;
     api.get(`/users/${targetId}`).then(({ data }) => {
@@ -54,6 +69,48 @@ export default function EmployeeProfile({ self = false }) {
 
   useEffect(load, [targetId]);
   useEffect(loadResume, [targetId]);
+
+  /* ─── Photo Upload Handler ─── */
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoError('');
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const query = isAdmin && !isSelf ? `?userId=${targetId}` : '';
+      const { data } = await api.post(`/photo/upload${query}`, formData);
+      setProfile(data.user);
+      setForm(data.user);
+      if (isSelf) refreshUser();
+      setNotice('Profile photo updated successfully!');
+      setTimeout(() => setNotice(''), 3000);
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  }
+
+  /* ─── Photo Remove Handler ─── */
+  async function handlePhotoRemove() {
+    setPhotoUploading(true);
+    setPhotoError('');
+    try {
+      const { data } = await api.delete(`/photo/${targetId}`);
+      setProfile(data.user);
+      setForm(data.user);
+      if (isSelf) refreshUser();
+      setNotice('Profile photo removed.');
+      setTimeout(() => setNotice(''), 3000);
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   async function handleResumeUpload(e) {
     const file = e.target.files[0];
@@ -141,11 +198,46 @@ export default function EmployeeProfile({ self = false }) {
   return (
     <div className="page">
       <div className="profile-header">
-        <span className="avatar-circle xlarge">{initials(profile.name)}</span>
+        {/* ─── PHOTO UPLOAD: Avatar with camera overlay ─── */}
+        <div className="avatar-upload-wrap">
+          <span className="avatar-circle xlarge">
+            {profile.profilePic ? (
+              <img src={profile.profilePic} alt={profile.name} />
+            ) : (
+              initials(profile.name)
+            )}
+          </span>
+          {canEdit && (
+            <label className="avatar-upload-overlay" title="Change photo">
+              <CameraIcon />
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={photoUploading}
+              />
+            </label>
+          )}
+        </div>
         <div>
           <h2>{profile.name}</h2>
           <p className="muted">{profile.jobPosition || profile.role} · {profile.department}</p>
           <p className="muted small">Employee ID: {profile.employeeCode}</p>
+          {/* Photo action buttons */}
+          {canEdit && (
+            <div className="photo-actions">
+              <button className="btn btn-secondary btn-sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+                {photoUploading ? 'Uploading...' : profile.profilePic ? 'Change Photo' : 'Upload Photo'}
+              </button>
+              {profile.profilePic && (
+                <button className="btn btn-danger btn-sm" onClick={handlePhotoRemove} disabled={photoUploading}>
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+          {photoError && <div className="alert alert-error" style={{ marginTop: 8, marginBottom: 0 }}>{photoError}</div>}
         </div>
         {todayStatus && (
           <span className={`status-badge status-${todayStatus === 'Present' ? 'present' : todayStatus === 'OnLeave' ? 'leave' : 'absent'}`}>

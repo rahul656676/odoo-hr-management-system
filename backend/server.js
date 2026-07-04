@@ -1,6 +1,7 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 console.log('GROQ_API_KEY loaded?', !!process.env.GROQ_API_KEY);
@@ -14,12 +15,16 @@ const attendanceRoutes = require('./routes/attendance');
 const leaveRoutes = require('./routes/leave');
 const salaryRoutes = require('./routes/salary');
 const resumeRoutes = require('./routes/resume');
+const photoRoutes = require('./routes/photo');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded profile photos as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Seed demo data (admin + 3 employees) on first run only.
 store.seedIfEmpty();
@@ -34,6 +39,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api/salary', salaryRoutes);
 app.use('/api/resume', resumeRoutes);
+app.use('/api/photo', photoRoutes);
 
 // 404 handler
 app.use('/api', (req, res) => {
@@ -43,6 +49,12 @@ app.use('/api', (req, res) => {
 // Central error handler (safety net)
 app.use((err, req, res, next) => {
   console.error(err);
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ error: err.message });
+  }
+  if (err.message?.startsWith('Only image files')) {
+    return res.status(400).json({ error: err.message });
+  }
   res.status(500).json({ error: 'Something went wrong on the server.' });
 });
 

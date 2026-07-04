@@ -1,5 +1,5 @@
-// src/components/Layout.jsx
-import { useState, useRef, useEffect } from 'react';
+﻿// src/components/Layout.jsx
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -75,12 +75,14 @@ export default function Layout() {
         <header className="topbar">
           <div className="topbar-search">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6"/><path d="M21 21l-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-            <span>Search employees, requests…</span>
+            <span>Search employees, requests...</span>
           </div>
 
           <div className="topbar-user" ref={menuRef}>
             <button className="avatar-btn" onClick={() => setMenuOpen((v) => !v)}>
-              <span className="avatar-circle">{initials(user?.name)}</span>
+              <span className="avatar-circle">
+                {user?.profilePic ? <img src={user.profilePic} alt={user?.name} /> : initials(user?.name)}
+              </span>
               <span className="avatar-name">{user?.name}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
