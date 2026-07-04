@@ -9,8 +9,12 @@ function initials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
 }
 
-const STATUS_ICON = { Present: '●', OnLeave: '●', Absent: '●', 'Half-day': '●' };
-
+const STATUS_ICON = {
+  Present: "🟢",
+  OnLeave: "✈️",
+  Absent: "🔴",
+  "Half-day": "🟡",
+};
 function AttendanceChart({ users }) {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const today = new Date();

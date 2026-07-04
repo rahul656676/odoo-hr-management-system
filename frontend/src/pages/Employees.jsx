@@ -13,10 +13,10 @@ function initials(name = "") {
 }
 
 const STATUS_ICON = {
-  Present: "●",
-  OnLeave: "●",
-  Absent: "●",
-  "Half-day": "●",
+  Present: "🟢",
+  OnLeave: "✈️",
+  Absent: "🔴",
+  "Half-day": "🟡",
 };
 
 const EMPTY_FORM = {
