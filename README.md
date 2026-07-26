@@ -1,13 +1,13 @@
-# Orbit HRMS — Human Resource Management System
+# Orbit HRMS ΓÇö Human Resource Management System
 
 A full-stack HRMS web app covering authentication, role-based dashboards,
 employee profiles, attendance tracking, leave/time-off management, and
-payroll visibility — built from the provided SRS document and wireframes.
+payroll visibility ΓÇö built from the provided SRS document and wireframes.
 
 ## Stack
-- **Backend:** Node.js, Express, JWT auth, bcrypt — data stored in a local
+- **Backend:** Node.js, Express, JWT auth, bcrypt ΓÇö data stored in a local
   JSON file (`backend/db/data/hrms.json`). No native modules, no external
-  database server required — installs and runs anywhere Node runs.
+  database server required ΓÇö installs and runs anywhere Node runs.
 - **Frontend:** React (Vite), React Router, Axios.
 
 ## Project Structure
@@ -45,7 +45,7 @@ cd hrms/frontend
 npm install
 npm run dev
 ```
-Runs on http://localhost:5173 (proxies `/api` calls to the backend — no CORS
+Runs on http://localhost:5173 (proxies `/api` calls to the backend ΓÇö no CORS
 setup needed). Open this URL in your browser.
 
 ## Demo Accounts
@@ -68,8 +68,8 @@ You can also sign up a new account from the Sign Up page.
 **3.2 Dashboard**
 - Employee: quick-access cards (Profile, Attendance, Leave Requests,
   Settings), check-in/out widget, time-off balance summary.
-- Admin/HR: employee grid with live attendance-status dot (🟢 present,
-  ✈️ on leave, 🟡 absent), clickable through to each profile.
+- Admin/HR: employee grid with live attendance-status dot (≡ƒƒó present,
+  Γ£ê∩╕Å on leave, ≡ƒƒí absent), clickable through to each profile.
 
 **3.3 Employee Profile Management**
 - View/Edit tabs: Profile, Private Info, Salary Info, Resume & Skills.
@@ -83,7 +83,7 @@ You can also sign up a new account from the Sign Up page.
 
 **3.5 Leave & Time-Off Management**
 - Apply for Paid / Sick / Unpaid leave with a date range and remarks.
-- Status flow: Pending → Approved/Rejected, with an HR comment.
+- Status flow: Pending ΓåÆ Approved/Rejected, with an HR comment.
 - Leave balances (Paid/Sick days available) auto-adjust on approval.
 
 **3.6 Payroll / Salary Management**
@@ -91,7 +91,7 @@ You can also sign up a new account from the Sign Up page.
   Allowance, Performance Bonus, LTA, Fixed Allowance, PF, Professional Tax,
   Net Pay).
 - Admin can edit the wage and every component percentage; components
-  recompute automatically (e.g. Wage ₹50,000 → Basic ₹25,000 → HRA ₹12,500).
+  recompute automatically (e.g. Wage Γé╣50,000 ΓåÆ Basic Γé╣25,000 ΓåÆ HRA Γé╣12,500).
 
 ## Notes
 - Data persists in `backend/db/data/hrms.json`. Delete that file to reset to
